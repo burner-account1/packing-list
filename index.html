@@ -1,56 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/ >
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SFPC Packing List</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            line-height: 1.6;
         }
-
-        h1 {
-            color: #333;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
-
-        .item-list {
-            list-style-type: decimal;
-            padding-left: 20px;
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
-
-        .item-list li a {
-            text-decoration: none;
-            color: #1a73e8;
+        th {
+            background-color: #f4f4f4;
         }
-
-        .item-list li a:hover {
-            text-decoration: underline;
+        input[type="number"] {
+            width: 60px;
         }
-
-        .disclaimer {
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .cart-link {
             margin-top: 20px;
-            font-size: 0.9em;
-            color: #555;
         }
     </style>
 </head>
 <body>
     <h1>SFPC Packing List</h1>
-    <p>Recently finished the course and wished I had something like this while going through-- good luck, men!</p>
-    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRldAZFI_zZnBN4Sghi8PLMdc2XtnIA8m4vSoYAWDwrleFInyzB-9u5zNZbr-7_GCuF2T72c5pxhItE/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
-    
-    <ol class="item-list">
-        <li><a href="https://www.amazon.com/dp/EXAMPLE1/?tag=YOUR_AFFILIATE_TAG" target="_blank">High-Quality Backpack</a></li>
-        <li><a href="https://www.amazon.com/dp/EXAMPLE2/?tag=YOUR_AFFILIATE_TAG" target="_blank">Lightweight Laptop</a></li>
-        <li><a href="https://amzn.to/3Bol5Qx">Rite in the rain Notebook</a></li>
-        <li><a href="https://www.amazon.com/dp/EXAMPLE4/?tag=YOUR_AFFILIATE_TAG" target="_blank">Comfortable Headphones</a></li>
-        <li><a href="https://www.amazon.com/dp/EXAMPLE5/?tag=YOUR_AFFILIATE_TAG" target="_blank">Reusable Water Bottle</a></li>
-    </ol>
-    
-    <div class="disclaimer">
-        <p><strong>Disclosure:</strong> Links on this page are affiliate links. I may earn a small commission at no extra cost to you. Goal is to do the same for all schools in the Q and beyond.</p>
+    <table id="packing-list">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows dynamically populated -->
+        </tbody>
+    </table>
+    <button onclick="generateCartLink()">Generate Add to Cart Link</button>
+    <div class="cart-link">
+        <p id="cart-output"></p>
     </div>
+
+    <script>
+        // Packing list data
+        const packingList = [
+            { name: "Backpack (65L or greater)", asin: "B000123456", quantity: 1 },
+            { name: "Tactical Boots (Waterproof)", asin: "B000654321", quantity: 2 },
+            { name: "Sleeping Bag (-10°C)", asin: "B000987654", quantity: 1 },
+            { name: "Multi-tool (Leatherman)", asin: "B000765432", quantity: 1 },
+            { name: "Flashlight (300 lumens)", asin: "B000543210", quantity: 1 }
+        ];
+
+        const tableBody = document.querySelector("#packing-list tbody");
+
+        // Populate table with packing list items
+        packingList.forEach((item, index) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td>
+                    <input type="number" id="quantity-${index}" value="${item.quantity}" min="0" />
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Generate Add to Cart Link
+        function generateCartLink() {
+            const baseUrl = "https://www.amazon.com/gp/aws/cart/add.html";
+            let cartLink = `${baseUrl}?tag=ceprince-20`; // Replace with your affiliate tag
+
+            packingList.forEach((item, index) => {
+                const quantity = document.querySelector(`#quantity-${index}`).value;
+                if (quantity > 0) {
+                    cartLink += `&ASIN.${index + 1}=${item.asin}&Quantity.${index + 1}=${quantity}`;
+                }
+            });
+
+            // Display the generated link
+            const cartOutput = document.getElementById("cart-output");
+            cartOutput.innerHTML = `
+                <a href="${cartLink}" target="_blank">Click here to add items to your cart</a>
+            `;
+        }
+    </script>
 </body>
 </html>
+
