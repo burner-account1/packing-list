@@ -52,5 +52,97 @@
         </tbody>
     </table>
 
-    <h2>Remaining Items</h2
+    <h2>Remaining Items</h2>
+    <button id="checkout-remaining" style="display: none;" onclick="checkoutRemaining()">Checkout Remaining Items</button>
+
+    <script>
+        const affiliateTag = "ceprince-20"; // Replace with your Amazon affiliate tag
+
+        // Packing list data
+        const packingList = [
+            { name: "Backpack (65L or greater)", asin: "B000123456", quantity: 1 },
+            { name: "Tactical Boots (Waterproof)", asin: "B000654321", quantity: 1 },
+            { name: "Sleeping Bag (-10°C)", asin: "B000987654", quantity: 1 },
+            { name: "Multi-tool (Leatherman)", asin: "B000765432", quantity: 1 },
+            { name: "Flashlight (300 lumens)", asin: "B000543210", quantity: 1 },
+            { name: "Compass", asin: "B000001111", quantity: 1 },
+            { name: "Water Bottle (1L)", asin: "B004H89NCC", quantity: 1 },
+            { name: "Rain Poncho", asin: "B01MQFDNSH", quantity: 1 },
+            { name: "First Aid Kit", asin: "B002VKT22O", quantity: 1 },
+            { name: "Knife (Fixed Blade)", asin: "B07VHN6FZH", quantity: 1 },
+            { name: "Gloves (Tactical)", asin: "B01EOWA00O", quantity: 1 }
+        ];
+
+        // Local cart
+        let localCart = [];
+        const cartBatchSize = 10;
+
+        // Populate packing list table
+        const tableBody = document.getElementById("packing-list");
+        packingList.forEach((item, index) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td><input type="number" id="quantity-${index}" value="${item.quantity}" min="0"></td>
+                <td><button onclick="addToLocalCart(${index})">Add to Local Cart</button></td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Add item to local cart
+        function addToLocalCart(index) {
+            const quantity = parseInt(document.getElementById(`quantity-${index}`).value);
+            if (quantity > 0) {
+                localCart.push({ asin: packingList[index].asin, quantity });
+                if (localCart.length >= cartBatchSize) {
+                    redirectToAmazonCart();
+                }
+            } else {
+                alert("Please select a valid quantity.");
+            }
+        }
+
+        // Redirect to Amazon with current cart batch
+        function redirectToAmazonCart() {
+            let cartLink = `https://www.amazon.com/gp/aws/cart/add.html?tag=${affiliateTag}`;
+            const currentBatch = localCart.splice(0, cartBatchSize); // Take first 10 items
+
+            currentBatch.forEach((item, index) => {
+                cartLink += `&ASIN.${index + 1}=${item.asin}&Quantity.${index + 1}=${item.quantity}`;
+            });
+
+            // Open the Amazon cart and show remaining items button if needed
+            window.open(cartLink, "_blank");
+            updateCheckoutButton();
+        }
+
+        // Update "Checkout Remaining Items" button visibility
+        function updateCheckoutButton() {
+            const checkoutButton = document.getElementById("checkout-remaining");
+            if (localCart.length > 0) {
+                checkoutButton.style.display = "block";
+            } else {
+                checkoutButton.style.display = "none";
+            }
+        }
+
+        // Checkout remaining items
+        function checkoutRemaining() {
+            if (localCart.length === 0) {
+                alert("No remaining items to checkout.");
+                return;
+            }
+
+            let cartLink = `https://www.amazon.com/gp/aws/cart/add.html?tag=${affiliateTag}`;
+            localCart.forEach((item, index) => {
+                cartLink += `&ASIN.${index + 1}=${item.asin}&Quantity.${index + 1}=${item.quantity}`;
+            });
+
+            localCart = []; // Clear the cart
+            window.open(cartLink, "_blank");
+            updateCheckoutButton();
+        }
+    </script>
+</body>
+</html>
 
