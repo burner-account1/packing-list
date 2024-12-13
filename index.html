@@ -33,6 +33,12 @@
         button:hover {
             background-color: #0056b3;
         }
+        .cart-info {
+            margin: 20px 0;
+        }
+        .checkout-button {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -52,11 +58,14 @@
         </tbody>
     </table>
 
-    <h2>Remaining Items</h2>
-    <button id="checkout-remaining" style="display: none;" onclick="checkoutRemaining()">Checkout Remaining Items</button>
+    <!-- Cart Information -->
+    <div class="cart-info">
+        <p id="cart-counter">Items in Cart: 0/10</p>
+        <button id="checkout-button" class="checkout-button" onclick="checkoutCart()">Checkout Cart</button>
+    </div>
 
     <script>
-        const affiliateTag = "ceprince-20"; // Replace with your Amazon affiliate tag
+        const affiliateTag = "your-affiliate-tag"; // Replace with your Amazon affiliate tag
 
         // Packing list data
         const packingList = [
@@ -94,42 +103,27 @@
             const quantity = parseInt(document.getElementById(`quantity-${index}`).value);
             if (quantity > 0) {
                 localCart.push({ asin: packingList[index].asin, quantity });
-                if (localCart.length >= cartBatchSize) {
-                    redirectToAmazonCart();
+                updateCartCounter();
+
+                // Automatically checkout when cart reaches 10 items
+                if (localCart.length === cartBatchSize) {
+                    checkoutCart();
                 }
             } else {
                 alert("Please select a valid quantity.");
             }
         }
 
-        // Redirect to Amazon with current cart batch
-        function redirectToAmazonCart() {
-            let cartLink = `https://www.amazon.com/gp/aws/cart/add.html?tag=${affiliateTag}`;
-            const currentBatch = localCart.splice(0, cartBatchSize); // Take first 10 items
-
-            currentBatch.forEach((item, index) => {
-                cartLink += `&ASIN.${index + 1}=${item.asin}&Quantity.${index + 1}=${item.quantity}`;
-            });
-
-            // Open the Amazon cart and show remaining items button if needed
-            window.open(cartLink, "_blank");
-            updateCheckoutButton();
+        // Update the cart counter
+        function updateCartCounter() {
+            const counter = document.getElementById("cart-counter");
+            counter.textContent = `Items in Cart: ${localCart.length}/${cartBatchSize}`;
         }
 
-        // Update "Checkout Remaining Items" button visibility
-        function updateCheckoutButton() {
-            const checkoutButton = document.getElementById("checkout-remaining");
-            if (localCart.length > 0) {
-                checkoutButton.style.display = "block";
-            } else {
-                checkoutButton.style.display = "none";
-            }
-        }
-
-        // Checkout remaining items
-        function checkoutRemaining() {
+        // Checkout the current cart
+        function checkoutCart() {
             if (localCart.length === 0) {
-                alert("No remaining items to checkout.");
+                alert("No items in the cart.");
                 return;
             }
 
@@ -138,11 +132,10 @@
                 cartLink += `&ASIN.${index + 1}=${item.asin}&Quantity.${index + 1}=${item.quantity}`;
             });
 
-            localCart = []; // Clear the cart
+            localCart = []; // Clear the cart after checkout
             window.open(cartLink, "_blank");
-            updateCheckoutButton();
+            updateCartCounter();
         }
     </script>
 </body>
 </html>
-
