@@ -168,4 +168,27 @@ footer {
   }
 }
 
+/* Button Styles */
+.button {
+  display: inline-block;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #007bff;
+  text-decoration: none;
+  border-radius: 5px;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+/* Align categories to the center */
+.category {
+  margin: 20px 0;
+  text-align: center;
+}
 
