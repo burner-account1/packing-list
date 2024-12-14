@@ -1,51 +1,132 @@
+#!/bin/bash
+
+# Exit on any error
+set -e
+
+# Variables
+REPO_NAME="packing-lists"
+GITHUB_USERNAME="<your-github-username>"
+ROOT_DIR="./$REPO_NAME"
+
+# Step 1: Create Local Directory
+echo "Creating project directory..."
+mkdir -p $ROOT_DIR/assets
+
+# Step 2: Generate Index Page
+echo "Creating index.html..."
+cat > $ROOT_DIR/index.html <<EOL
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SFAS Packing List</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        iframe {
-            width: 1200px; /* Set wider viewing window */
-            max-width: 100%; /* Ensures responsiveness */
-            height: 800px; /* Increase height for better visibility */
-            border: none;
-            display: block;
-            margin: 0 auto; /* Center the iframe */
-        }
-        .container {
-            max-width: 1200px; /* Matches iframe width */
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Packing Lists</title>
+  <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>SFAS Packing List</h1>
-        <p>
-            I recently finished the course, this is something I wish I would have had while going through. <br>
-            We're looking to make it more streamlined and add all courses in the Q-- Good luck men! <br>
-            We cleaned up the descriptions but provided options that meet the requirements. <br>
-            We're using amazon for ease of use and because they have virtually everything at very reasonable prices. <br>
-            We're working to find vendors to fulfill everything amazon cannot. <br>
-
-            *We make a small commission at no cost to you but only if you purchase within 24 hours of adding to your cart-- so please hook a brother up* <br>
-
-            ***BEST TO SHIP TO A RESIDENTIAL ADDRTESS OR TO A UPS STORE FOR PICKUP*** <br>
-        <!-- Embed the Google Sheet -->
-        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT9wQWktuGa2eBLEXrQGeP4O7EYTig4XJur7briIfP0dB0OAIbRPM605-vAANdLeLQmHpFhQJmrA3CN/pubhtml?gid=256870927&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
-    </div>
+  <h1>Special Forces Packing Lists</h1>
+  <p>Select a school to view the recommended packing list:</p>
+  <ul>
+    <li><a href="sfpc.html">SFPC</a></li>
+    <li><a href="sfas.html">SFAS</a></li>
+    <li><a href="sut.html">SUT</a></li>
+    <li><a href="sere.html">SERE</a></li>
+    <li><a href="robin-sage.html">Robin Sage</a></li>
+    <li><a href="alpha.html">Alpha</a></li>
+    <li><a href="bravo.html">Bravo</a></li>
+    <li><a href="charlie.html">Charlie</a></li>
+    <li><a href="delta.html">Delta</a></li>
+    <li><a href="echo.html">Echo</a></li>
+  </ul>
 </body>
 </html>
+EOL
+
+# Step 3: Generate Packing List Pages
+SCHOOLS=("sfpc" "sfas" "sut" "sere" "robin-sage" "alpha" "bravo" "charlie" "delta" "echo")
+
+for SCHOOL in "${SCHOOLS[@]}"; do
+  echo "Creating $SCHOOL.html..."
+  cat > $ROOT_DIR/$SCHOOL.html <<EOL
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${SCHOOL^^} Packing List</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <h1>${SCHOOL^^} Packing List</h1>
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+    <li>Item 3</li>
+  </ul>
+  <a href="index.html">Back to Home</a>
+</body>
+</html>
+EOL
+done
+
+# Step 4: Add Stylesheet
+echo "Creating assets/styles.css..."
+cat > $ROOT_DIR/assets/styles.css <<EOL
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+  color: #333;
+}
+h1 {
+  background: #333;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+}
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+ul li {
+  margin: 10px 0;
+}
+a {
+  text-decoration: none;
+  color: #0066cc;
+}
+a:hover {
+  text-decoration: underline;
+}
+EOL
+
+# Step 5: Initialize Git Repository
+echo "Initializing Git repository..."
+cd $ROOT_DIR
+git init
+git add .
+git commit -m "Initial commit - Packing Lists"
+
+# Step 6: Create GitHub Repository (optional, requires GitHub CLI)
+echo "Creating GitHub repository..."
+gh repo create $REPO_NAME --public --source=. --remote=origin --push || {
+  echo "Skipping repository creation. Please manually create $REPO_NAME on GitHub."
+}
+
+# Step 7: Push to GitHub
+echo "Pushing to GitHub..."
+git branch -M main
+git remote add origin git@github.com:$GITHUB_USERNAME/$REPO_NAME.git
+git push -u origin main
+
+# Step 8: Enable GitHub Pages
+echo "Enabling GitHub Pages..."
+gh api -X PATCH repos/$GITHUB_USERNAME/$REPO_NAME/pages --field source=branch --field branch=main || {
+  echo "Failed to enable GitHub Pages. Please enable it manually in your repository settings."
+}
+
+echo "GitHub Pages website deployed: https://$GITHUB_USERNAME.github.io/$REPO_NAME"
+
 
