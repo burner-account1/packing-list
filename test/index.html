@@ -125,24 +125,29 @@
     let confirmedItems = [];
 
     // Add an item to the needed list
-    function addToNeeded(name, link, quantity) {
-      if (!quantity || quantity <= 0) {
-        alert('Please enter a valid quantity.');
-        return;
-      }
+  function addToNeeded(name, link, quantity, buttonElement) {
+  if (!quantity || quantity <= 0) {
+    alert('Please enter a valid quantity.');
+    return;
+  }
+
   // Add the item to the neededItems array
   neededItems.push({ name, link, quantity });
   renderNeededItems();
 
-  // Temporarily change button text
-  const originalText = buttonElement.textContent;
-  buttonElement.textContent = `Added: ${quantity}`;
-  buttonElement.disabled = true; // Disable button temporarily
-  setTimeout(() => {
-    buttonElement.textContent = originalText;
-    buttonElement.disabled = false; // Re-enable button
-  }, 2000); // Revert after 2 seconds
+  // Add a small badge below the button
+  let badge = buttonElement.parentNode.querySelector('.added-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.className = 'added-badge';
+    badge.style.color = '#007bff';
+    badge.style.marginTop = '5px';
+    badge.style.fontSize = '14px';
+    buttonElement.parentNode.appendChild(badge);
+  }
+  badge.textContent = `Added: ${quantity}`;
 }
+
 
     // Render the needed items list
     function renderNeededItems() {
