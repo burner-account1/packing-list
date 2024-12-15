@@ -130,16 +130,19 @@
         alert('Please enter a valid quantity.');
         return;
       }
+  // Add the item to the neededItems array
   neededItems.push({ name, link, quantity });
   renderNeededItems();
-       // Display the quantity as an indicator next to the button
-       let indicator = buttonElement.nextElementSibling;
-  if (!indicator) {
-    indicator = document.createElement('span');
-    indicator.style.color = 'red';
-    indicator.style.marginLeft = '10px';
-    buttonElement.parentNode.appendChild(indicator);
-  }
+
+  // Temporarily change button text
+  const originalText = buttonElement.textContent;
+  buttonElement.textContent = `Added: ${quantity}`;
+  buttonElement.disabled = true; // Disable button temporarily
+  setTimeout(() => {
+    buttonElement.textContent = originalText;
+    buttonElement.disabled = false; // Re-enable button
+  }, 2000); // Revert after 2 seconds
+}
 
     // Render the needed items list
     function renderNeededItems() {
