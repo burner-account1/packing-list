@@ -130,10 +130,16 @@
         alert('Please enter a valid quantity.');
         return;
       }
-      neededItems.push({ name, link, quantity });
-      renderNeededItems();
-      alert(`${name} added to Needed Items.`);
-    }
+  neededItems.push({ name, link, quantity });
+  renderNeededItems();
+       // Display the quantity as an indicator next to the button
+       let indicator = buttonElement.nextElementSibling;
+  if (!indicator) {
+    indicator = document.createElement('span');
+    indicator.style.color = 'red';
+    indicator.style.marginLeft = '10px';
+    buttonElement.parentNode.appendChild(indicator);
+  }
 
     // Render the needed items list
     function renderNeededItems() {
