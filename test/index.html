@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Sheet Data Viewer</title>
+  <title>Google Sheet Data Viewer with Links</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,6 +30,13 @@
     th {
       background-color: #f0f0f0;
     }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
     .loading {
       text-align: center;
       color: #555;
@@ -37,22 +44,22 @@
   </style>
 </head>
 <body>
-  <h1>Google Sheet Data Viewer</h1>
+  <h1>Google Sheet Data Viewer with Links</h1>
   <div id="loading" class="loading">Loading data...</div>
   <div id="table-container"></div>
 
   <script>
     async function fetchSheetData() {
-      // The CSV link you provided
-      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBtkl_FdufNl2KZ0Jom-MKMn-llMHPhKxNsLsUF8QWR4RuOd8Cq_dUprvwqEVMgmzWCzBUKmyOf9gD/pub?output=csv';
-      
+      // URL for TSV data
+      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBtkl_FdufNl2KZ0Jom-MKMn-llMHPhKxNsLsUF8QWR4RuOd8Cq_dUprvwqEVMgmzWCzBUKmyOf9gD/pub?output=tsv';
+
       try {
-        // Fetch the CSV data
+        // Fetch the TSV data
         const response = await fetch(url);
-        const csvData = await response.text();
-        
-        // Parse the CSV data
-        const rows = csvData.split('\n').map(row => row.split(','));
+        const tsvData = await response.text();
+
+        // Parse the TSV data
+        const rows = tsvData.split('\n').map(row => row.split('\t'));
 
         // Render the data as a table
         renderTable(rows);
@@ -71,10 +78,17 @@
       data.forEach((row, rowIndex) => {
         html += '<tr>';
         row.forEach(cell => {
+          const trimmedCell = cell.trim();
           if (rowIndex === 0) {
-            html += `<th>${cell.trim()}</th>`; // Table headers
+            // Table headers
+            html += `<th>${trimmedCell}</th>`;
           } else {
-            html += `<td>${cell.trim()}</td>`; // Table cells
+            // Table data: Check if the cell contains a URL
+            if (isValidURL(trimmedCell)) {
+              html += `<td><a href="${trimmedCell}" target="_blank">${trimmedCell}</a></td>`;
+            } else {
+              html += `<td>${trimmedCell}</td>`;
+            }
           }
         });
         html += '</tr>';
@@ -86,7 +100,16 @@
       tableContainer.innerHTML = html;
     }
 
-    // Fetch and display the sheet data when the page loads
+    function isValidURL(string) {
+      try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // Fetch and display the sheet data
     fetchSheetData();
   </script>
 </body>
