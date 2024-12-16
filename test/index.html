@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Packing List</title>
+  <title>Packing List with Status Indicators</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -27,18 +27,21 @@
     }
     .item {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       margin-bottom: 15px;
     }
-    .item label {
-      flex: 1;
+    .status-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      margin-right: 10px;
+      transition: background-color 0.3s;
     }
-    .item input[type="number"] {
-      width: 50px;
-      margin-left: 10px;
-    }
-    .item button {
+    .red { background-color: #ff4d4f; } /* Default */
+    .yellow { background-color: #ffc107; } /* Added to Cart */
+    .green { background-color: #28a745; } /* Checked Off */
+    button {
       background-color: #007bff;
       color: white;
       border: none;
@@ -47,170 +50,86 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-    .item button:hover {
+    button:hover {
       background-color: #0056b3;
     }
-    .list-section {
-      margin-bottom: 20px;
-    }
-    .bulk-checkout, .final-checkout {
+    .add-all {
+      margin-top: 20px;
       text-align: center;
-      margin-top: 20px;
     }
-    .bulk-checkout button, .final-checkout button {
+    .add-all button {
       background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
       font-size: 16px;
-    }
-    .bulk-checkout button:hover, .final-checkout button:hover {
-      background-color: #218838;
-    }
-    .confirmed-items {
-      margin-top: 20px;
+      padding: 10px 20px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Interactive Packing List</h1>
-    <div class="list-section">
-      <h2>Packing Items</h2>
-      <div id="packing-items">
-        <div class="item">
-          <label>Backpack</label>
-          <input type="number" id="backpack-qty" placeholder="Qty">
-          <button onclick="addToNeeded('Backpack', 'https://www.amazon.com/dp/B01N4PVEZH?tag=your-affiliate-tag-20', document.getElementById('backpack-qty').value)">Add to Needed</button>
-        </div>
-        <div class="item">
-          <label>Boots</label>
-          <input type="number" id="boots-qty" placeholder="Qty">
-          <button onclick="addToNeeded('Boots', 'https://www.amazon.com/dp/B01LWZKPVS?tag=your-affiliate-tag-20', document.getElementById('boots-qty').value)">Add to Needed</button>
-        </div>
-        <div class="item">
-          <label>Sleeping Bag</label>
-          <input type="number" id="sleeping-bag-qty" placeholder="Qty">
-          <button onclick="addToNeeded('Sleeping Bag', 'https://www.amazon.com/dp/B00EOT5CY8?tag=your-affiliate-tag-20', document.getElementById('sleeping-bag-qty').value)">Add to Needed</button>
-        </div>
+    <h1>Packing List</h1>
+    <div id="packing-items">
+      <div class="item" data-name="Backpack" data-link="https://www.amazon.com/dp/B01N4PVEZH?tag=your-affiliate-tag-20">
+        <div class="status-box red"></div>
+        <label>Backpack</label>
+        <input type="checkbox" onchange="markChecked(this)">
+        <button onclick="addToCart(this)">Add to Cart</button>
+      </div>
+      <div class="item" data-name="Boots" data-link="https://www.amazon.com/dp/B01LWZKPVS?tag=your-affiliate-tag-20">
+        <div class="status-box red"></div>
+        <label>Boots</label>
+        <input type="checkbox" onchange="markChecked(this)">
+        <button onclick="addToCart(this)">Add to Cart</button>
+      </div>
+      <div class="item" data-name="Sleeping Bag" data-link="https://www.amazon.com/dp/B00EOT5CY8?tag=your-affiliate-tag-20">
+        <div class="status-box red"></div>
+        <label>Sleeping Bag</label>
+        <input type="checkbox" onchange="markChecked(this)">
+        <button onclick="addToCart(this)">Add to Cart</button>
       </div>
     </div>
-
-    <div class="list-section">
-      <h2>Needed Items</h2>
-      <div id="needed-items">
-        <!-- Dynamically populated -->
-      </div>
-      <div class="bulk-checkout">
-        <button onclick="bulkCheckout()">Bulk add to Cart</button>
-      </div>
-    </div>
-
-    <div class="list-section confirmed-items">
-      <h2>Confirmed Items</h2>
-      <div id="confirmed-items">
-        <!-- Dynamically populated -->
-      </div>
-    </div>
-
-   <div class="final-checkout" style="display: none;" id="checkout-button">
-     <button onclick="finalCheckout()">Final Checkout</button>
+    <div class="add-all">
+      <button onclick="addEverythingToCart()">Add Everything to Cart</button>
     </div>
   </div>
 
   <script>
-    let neededItems = [];
-    let confirmedItems = [];
-
-    // Add an item to the needed list
-  function addToNeeded(name, link, quantity, buttonElement) {
-  if (!quantity || quantity <= 0) {
-    alert('Please enter a valid quantity.');
-    return;
-  }
-
-  // Add the item to the neededItems array
-  neededItems.push({ name, link, quantity });
-  renderNeededItems();
-
-  // Add a small badge below the button
-  let badge = buttonElement.parentNode.querySelector('.added-badge');
-  if (!badge) {
-    badge = document.createElement('div');
-    badge.className = 'added-badge';
-    badge.style.color = '#007bff';
-    badge.style.marginTop = '5px';
-    badge.style.fontSize = '14px';
-    buttonElement.parentNode.appendChild(badge);
-  }
-  badge.textContent = `Added: ${quantity}`;
-}
-
-
-    // Render the needed items list
-    function renderNeededItems() {
-      const neededDiv = document.getElementById('needed-items');
-      neededDiv.innerHTML = '';
-      neededItems.forEach((item, index) => {
-        neededDiv.innerHTML += `
-          <div class="item">
-            ${item.name} (Qty: ${item.quantity})
-            <button onclick="confirmItem(${index})">Confirm</button>
-            <button onclick="openItem('${item.link}')">View on Amazon</button>
-          </div>`;
-      });
-    }
-
-    // Confirm an item
-    function confirmItem(index) {
-      const item = neededItems.splice(index, 1)[0];
-      confirmedItems.push(item);
-      renderNeededItems();
-      renderConfirmedItems();
-      checkAllItemsConfirmed();
-    }
-
-    // Render the confirmed items list
-    function renderConfirmedItems() {
-      const confirmedDiv = document.getElementById('confirmed-items');
-      confirmedDiv.innerHTML = '';
-      confirmedItems.forEach(item => {
-        confirmedDiv.innerHTML += `<div>${item.name} (Confirmed)</div>`;
-      });
-    }
-
-    // Open an item's link in a split-screen friendly window
-    function openItem(link) {
-      const width = window.screen.width / 2;
-      const height = window.screen.height;
-      window.open(link, '_blank', `width=${width},height=${height},left=0,top=0`);
-    }
-
-    // Perform bulk checkout (up to 10 items)
-    function bulkCheckout() {
-      const bulkItems = neededItems.slice(0, 10);
-      bulkItems.forEach(item => openItem(item.link));
-      neededItems = neededItems.slice(10);
-      renderNeededItems();
-      if (neededItems.length === 0) {
-        checkAllItemsConfirmed();
+    // Mark item as checked
+    function markChecked(checkbox) {
+      const item = checkbox.closest('.item');
+      const statusBox = item.querySelector('.status-box');
+      if (checkbox.checked) {
+        statusBox.className = 'status-box green'; // Change to green
+      } else {
+        statusBox.className = 'status-box red'; // Revert to red
       }
     }
 
-    // Final checkout
-    function finalCheckout() {
-      window.open('https://www.amazon.com/gp/cart/view.html', '_blank');
+    // Add item to cart
+    function addToCart(button) {
+      const item = button.closest('.item');
+      const statusBox = item.querySelector('.status-box');
+      const link = item.getAttribute('data-link');
+      window.open(link, '_blank'); // Open the Amazon link
+      statusBox.className = 'status-box yellow'; // Change to yellow
     }
 
-    // Check if all items are confirmed
-    function checkAllItemsConfirmed() {
-      if (neededItems.length === 0) {
-        document.getElementById('checkout-button').style.display = 'block';
-      }
+    // Add all unchecked items to the cart
+    function addEverythingToCart() {
+      const items = document.querySelectorAll('.item');
+      items.forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        const statusBox = item.querySelector('.status-box');
+        const link = item.getAttribute('data-link');
+
+        if (!checkbox.checked) {
+          window.open(link, '_blank'); // Open the Amazon link
+          statusBox.className = 'status-box green'; // Mark as complete
+          checkbox.checked = true; // Automatically check off the item
+        }
+      });
     }
   </script>
 </body>
 </html>
+
 
