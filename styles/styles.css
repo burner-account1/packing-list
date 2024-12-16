@@ -98,9 +98,9 @@ img, video {
 
 /* Footer */
 footer {
+  background-color: #76923c;
   text-align: center;
   padding: 15px 10px;
-  background: #222;
   color: white;
   margin-top: 20px;
   font-size: 0.9rem;
