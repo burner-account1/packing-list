@@ -3,133 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Packing List with Status Indicators</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <title>Interactive Google Sheet</title>
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
-      line-height: 1.6;
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 20px;
       background-color: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
     h1 {
       text-align: center;
       color: #333;
     }
-    .item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 15px;
+    iframe {
+      width: 100%;
+      height: 400px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
     }
-    .status-box {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-      margin-right: 10px;
-      transition: background-color 0.3s;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
     }
-    .red { background-color: #ff4d4f; } /* Default */
-    .yellow { background-color: #ffc107; } /* Added to Cart */
-    .green { background-color: #28a745; } /* Checked Off */
-    button {
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    input[type="text"] {
+      width: 80%;
+      padding: 5px;
+    }
+    .button {
+      padding: 10px 20px;
+      margin-top: 20px;
       background-color: #007bff;
       color: white;
       border: none;
-      padding: 5px 10px;
       border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
-    button:hover {
+    .button:hover {
       background-color: #0056b3;
-    }
-    .add-all {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .add-all button {
-      background-color: #28a745;
-      font-size: 16px;
-      padding: 10px 20px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Packing List</h1>
-    <div id="packing-items">
-      <div class="item" data-name="Backpack" data-link="https://www.amazon.com/dp/B01N4PVEZH?tag=your-affiliate-tag-20">
-        <div class="status-box red"></div>
-        <label>Backpack</label>
-        <input type="checkbox" onchange="markChecked(this)">
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-      <div class="item" data-name="Boots" data-link="https://www.amazon.com/dp/B01LWZKPVS?tag=your-affiliate-tag-20">
-        <div class="status-box red"></div>
-        <label>Boots</label>
-        <input type="checkbox" onchange="markChecked(this)">
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-      <div class="item" data-name="Sleeping Bag" data-link="https://www.amazon.com/dp/B00EOT5CY8?tag=your-affiliate-tag-20">
-        <div class="status-box red"></div>
-        <label>Sleeping Bag</label>
-        <input type="checkbox" onchange="markChecked(this)">
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-    </div>
-    <div class="add-all">
-      <button onclick="addEverythingToCart()">Add Everything to Cart</button>
-    </div>
-  </div>
+  <h1>Interactive Google Sheet Viewer</h1>
+
+  <!-- Embed the Google Sheet -->
+  <iframe 
+    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHdNPuVnbUNA5AjBha3UoK59CE4yZkLmzLiNdV5buXM0xJV7J47aAbSehLcPsFpXNMQqkNc_e3_VQ/pubhtml">
+  </iframe>
+
+  <!-- Interactive Table -->
+  <h2>Interactive Data</h2>
+  <div id="loading">Loading data...</div>
+  <table id="data-table">
+    <thead>
+      <tr>
+        <th>Row Data</th>
+        <th>Your Input</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="button" onclick="submitData()">Submit</button>
 
   <script>
-    // Mark item as checked
-    function markChecked(checkbox) {
-      const item = checkbox.closest('.item');
-      const statusBox = item.querySelector('.status-box');
-      if (checkbox.checked) {
-        statusBox.className = 'status-box green'; // Change to green
-      } else {
-        statusBox.className = 'status-box red'; // Revert to red
-      }
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHdNPuVnbUNA5AjBha3UoK59CE4yZkLmzLiNdV5buXM0xJV7J47aAbSehLcPsFpXNMQqkNc_e3_VQ/pub?output=csv';
+
+    // Fetch data from the published Google Sheet
+    async function fetchSheetData() {
+      const response = await fetch(sheetUrl);
+      const csvData = await response.text();
+      const rows = csvData.split('\n').map(row => row.split(','));
+      populateTable(rows);
     }
 
-    // Add item to cart
-    function addToCart(button) {
-      const item = button.closest('.item');
-      const statusBox = item.querySelector('.status-box');
-      const link = item.getAttribute('data-link');
-      window.open(link, '_blank'); // Open the Amazon link
-      statusBox.className = 'status-box yellow'; // Change to yellow
-    }
+    // Populate the interactive table
+    function populateTable(rows) {
+      const tbody = document.querySelector('#data-table tbody');
+      document.getElementById('loading').style.display = 'none';
 
-    // Add all unchecked items to the cart
-    function addEverythingToCart() {
-      const items = document.querySelectorAll('.item');
-      items.forEach(item => {
-        const checkbox = item.querySelector('input[type="checkbox"]');
-        const statusBox = item.querySelector('.status-box');
-        const link = item.getAttribute('data-link');
+      rows.forEach((row, index) => {
+        if (index === 0) return; // Skip header row
 
-        if (!checkbox.checked) {
-          window.open(link, '_blank'); // Open the Amazon link
-          statusBox.className = 'status-box green'; // Mark as complete
-          checkbox.checked = true; // Automatically check off the item
-        }
+        const tableRow = document.createElement('tr');
+        const dataCell = document.createElement('td');
+        const inputCell = document.createElement('td');
+
+        // Fill in row data
+        dataCell.textContent = row.join(' | '); // Combine columns into a single string
+        inputCell.innerHTML = `<input type="text" data-row="${index}" placeholder="Enter something">`;
+
+        tableRow.appendChild(dataCell);
+        tableRow.appendChild(inputCell);
+        tbody.appendChild(tableRow);
       });
     }
+
+    // Collect and submit user input
+    function submitData() {
+      const inputs = document.querySelectorAll('input[data-row]');
+      const submittedData = [];
+
+      inputs.forEach(input => {
+        const rowIndex = input.getAttribute('data-row');
+        const userInput = input.value;
+        submittedData.push({ row: rowIndex, input: userInput });
+      });
+
+      console.log('Submitted Data:', submittedData);
+      alert('Data submitted! Check the console for details.');
+    }
+
+    // Initialize
+    fetchSheetData();
   </script>
 </body>
 </html>
-
 
