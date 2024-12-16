@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Sheet Data Viewer with Links</title>
+  <title>Google Sheet Data Viewer with Checkboxes and Buttons</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,6 +37,17 @@
     a:hover {
       text-decoration: underline;
     }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
     .loading {
       text-align: center;
       color: #555;
@@ -44,7 +55,7 @@
   </style>
 </head>
 <body>
-  <h1>Google Sheet Data Viewer with Links</h1>
+  <h1>Google Sheet Data Viewer with Checkboxes and Buttons</h1>
   <div id="loading" class="loading">Loading data...</div>
   <div id="table-container"></div>
 
@@ -75,22 +86,28 @@
 
       // Generate the table HTML
       let html = '<table>';
-      data.forEach((row, rowIndex) => {
+      html += '<tr>';
+      data[0].forEach(header => {
+        html += `<th>${header.trim()}</th>`;
+      });
+      html += '<th>Checkbox</th><th>Action</th></tr>'; // Add headers for checkboxes and buttons
+
+      data.slice(1).forEach((row, rowIndex) => {
         html += '<tr>';
         row.forEach(cell => {
           const trimmedCell = cell.trim();
-          if (rowIndex === 0) {
-            // Table headers
-            html += `<th>${trimmedCell}</th>`;
+          // Table data: Check if the cell contains a URL
+          if (isValidURL(trimmedCell)) {
+            html += `<td><a href="${trimmedCell}" target="_blank">${trimmedCell}</a></td>`;
           } else {
-            // Table data: Check if the cell contains a URL
-            if (isValidURL(trimmedCell)) {
-              html += `<td><a href="${trimmedCell}" target="_blank">${trimmedCell}</a></td>`;
-            } else {
-              html += `<td>${trimmedCell}</td>`;
-            }
+            html += `<td>${trimmedCell}</td>`;
           }
         });
+        // Add checkbox and button to each row
+        html += `
+          <td><input type="checkbox" id="checkbox-${rowIndex}" /></td>
+          <td><button onclick="handleButtonClick(${rowIndex})">Action</button></td>
+        `;
         html += '</tr>';
       });
       html += '</table>';
@@ -107,6 +124,13 @@
       } catch (_) {
         return false;
       }
+    }
+
+    function handleButtonClick(rowIndex) {
+      const checkbox = document.getElementById(`checkbox-${rowIndex}`);
+      const isChecked = checkbox.checked;
+      console.log(`Button clicked for row ${rowIndex}, Checkbox checked: ${isChecked}`);
+      alert(`Button clicked for row ${rowIndex}\nCheckbox is ${isChecked ? 'checked' : 'unchecked'}`);
     }
 
     // Fetch and display the sheet data
