@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Google Sheet</title>
+  <title>Google Sheet Data Viewer</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,12 +14,6 @@
     h1 {
       text-align: center;
       color: #333;
-    }
-    iframe {
-      width: 100%;
-      height: 400px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
     }
     table {
       width: 100%;
@@ -36,97 +30,75 @@
     th {
       background-color: #f0f0f0;
     }
-    input[type="text"] {
-      width: 80%;
-      padding: 5px;
-    }
-    .button {
-      padding: 10px 20px;
-      margin-top: 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .button:hover {
-      background-color: #0056b3;
+    .loading {
+      text-align: center;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <h1>Interactive Google Sheet Viewer</h1>
-
-  <!-- Embed the Google Sheet -->
-  <iframe 
-    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHdNPuVnbUNA5AjBha3UoK59CE4yZkLmzLiNdV5buXM0xJV7J47aAbSehLcPsFpXNMQqkNc_e3_VQ/pubhtml">
-  </iframe>
-
-  <!-- Interactive Table -->
-  <h2>Interactive Data</h2>
-  <div id="loading">Loading data...</div>
-  <table id="data-table">
-    <thead>
-      <tr>
-        <th>Row Data</th>
-        <th>Your Input</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <button class="button" onclick="submitData()">Submit</button>
+  <h1>Google Sheet Data Viewer</h1>
+  <div id="loading" class="loading">Loading data...</div>
+  <div id="table-container"></div>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHdNPuVnbUNA5AjBha3UoK59CE4yZkLmzLiNdV5buXM0xJV7J47aAbSehLcPsFpXNMQqkNc_e3_VQ/pub?output=csv';
-
-    // Fetch data from the published Google Sheet
     async function fetchSheetData() {
-      const response = await fetch(sheetUrl);
-      const csvData = await response.text();
-      const rows = csvData.split('\n').map(row => row.split(','));
-      populateTable(rows);
+      // URL for your public Google Sheet JSON feed
+      const url = 'https://spreadsheets.google.com/feeds/cells/2PACX-1vRbHdNPuVnbUNA5AjBha3UoK59CE4yZkLmzLiNdV5buXM0xJV7J47aAbSehLcPsFpXNMQqkNc_e3_VQ/1/public/full?alt=json';
+      
+      try {
+        // Fetch data from the API
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Parse rows and columns
+        const entries = data.feed.entry;
+        const table = {};
+        entries.forEach(entry => {
+          const cell = entry.gs$cell;
+          const rowIndex = parseInt(cell.row, 10) - 1;
+          const colIndex = parseInt(cell.col, 10) - 1;
+
+          if (!table[rowIndex]) table[rowIndex] = [];
+          table[rowIndex][colIndex] = cell.inputValue; // Adjust to 0-based index
+        });
+
+        const tableData = Object.values(table);
+        renderTable(tableData);
+      } catch (error) {
+        console.error('Error fetching sheet data:', error);
+        document.getElementById('loading').textContent = 'Failed to load data. Please try again later.';
+      }
     }
 
-    // Populate the interactive table
-    function populateTable(rows) {
-      const tbody = document.querySelector('#data-table tbody');
+    function renderTable(data) {
+      // Clear loading message
       document.getElementById('loading').style.display = 'none';
 
-      rows.forEach((row, index) => {
-        if (index === 0) return; // Skip header row
-
-        const tableRow = document.createElement('tr');
-        const dataCell = document.createElement('td');
-        const inputCell = document.createElement('td');
-
-        // Fill in row data
-        dataCell.textContent = row.join(' | '); // Combine columns into a single string
-        inputCell.innerHTML = `<input type="text" data-row="${index}" placeholder="Enter something">`;
-
-        tableRow.appendChild(dataCell);
-        tableRow.appendChild(inputCell);
-        tbody.appendChild(tableRow);
+      // Generate table HTML
+      let html = '<table>';
+      data.forEach((row, rowIndex) => {
+        html += '<tr>';
+        row.forEach((cell, colIndex) => {
+          if (rowIndex === 0) {
+            html += `<th>${cell || ''}</th>`; // Header row
+          } else {
+            html += `<td>${cell || ''}</td>`; // Data rows
+          }
+        });
+        html += '</tr>';
       });
+      html += '</table>';
+
+      // Display table in the container
+      const tableContainer = document.getElementById('table-container');
+      tableContainer.innerHTML = html;
     }
 
-    // Collect and submit user input
-    function submitData() {
-      const inputs = document.querySelectorAll('input[data-row]');
-      const submittedData = [];
-
-      inputs.forEach(input => {
-        const rowIndex = input.getAttribute('data-row');
-        const userInput = input.value;
-        submittedData.push({ row: rowIndex, input: userInput });
-      });
-
-      console.log('Submitted Data:', submittedData);
-      alert('Data submitted! Check the console for details.');
-    }
-
-    // Initialize
+    // Fetch and display the sheet data
     fetchSheetData();
   </script>
 </body>
 </html>
+
 
