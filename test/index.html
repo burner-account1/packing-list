@@ -69,6 +69,7 @@
   <div id="needed-list">
     <h2>Needed Items</h2>
     <ul id="needed-items"></ul>
+    <button onclick="addToFinalList()" style="margin-top: 20px;">Generate Final List</button>
   </div>
 
   <script>
@@ -188,6 +189,36 @@
       }
     }
   });
+}
+function extractProductID(link) {
+  try {
+    const url = new URL(link.trim());
+    const productID = url.pathname.split('/').find(part => part.match(/^[A-Z0-9]{10}$/));
+    return productID || null; // Return the ID or null if not found
+  } catch {
+    return null; // Return null for invalid URLs
+  }
+}
+function addToFinalList() {
+  const finalList = []; // This will store the final list of items
+
+  // Iterate through the "Needed List" items
+  neededItems.forEach(item => {
+    const { name, quantity } = item;
+
+    // Extract the product link from the row's name
+    const links = name.match(/https?:\/\/[^\s]+/g) || [];
+    links.forEach(link => {
+      const productID = extractProductID(link);
+      if (productID) {
+        finalList.push({ productID, quantity });
+      }
+    });
+  });
+
+  // Display or process the final list
+  console.log('Final List:', finalList);
+  alert(`Final List Ready. Check console for details.`);
 }
 
 
