@@ -105,7 +105,7 @@
       const rows = data.slice(1);
 
       // Find the indices of columns to exclude
-      const excludeColumns = ['M/O', 'ISSUED','Recommended',"Requires Customization"];
+      const excludeColumns = ['M', 'ISSUED','Recommended',"Requires Customization"];
       const excludeIndices = headers
         .map((header, index) => (excludeColumns.includes(header.trim()) ? index : -1))
         .filter(index => index !== -1);
