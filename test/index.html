@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Sheet Data Viewer with Checkboxes and Buttons</title>
+  <title>Google Sheet Data Viewer with Needed List</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,39 +30,53 @@
     th {
       background-color: #f0f0f0;
     }
-    a {
-      color: #007bff;
-      text-decoration: none;
+    .actions {
+      display: flex;
+      align-items: center;
     }
-    a:hover {
-      text-decoration: underline;
+    select {
+      margin-left: 10px;
+      padding: 5px;
     }
     button {
       background-color: #007bff;
       color: white;
       border: none;
       padding: 5px 10px;
+      margin-left: 10px;
       border-radius: 3px;
       cursor: pointer;
     }
     button:hover {
       background-color: #0056b3;
     }
-    .loading {
-      text-align: center;
-      color: #555;
+    #needed-list {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #needed-list h2 {
+      margin-top: 0;
     }
   </style>
 </head>
 <body>
-  <h1>Google Sheet Data Viewer with Checkboxes and Buttons</h1>
-  <div id="loading" class="loading">Loading data...</div>
+  <h1>Google Sheet Data Viewer</h1>
+  <div id="loading">Loading data...</div>
   <div id="table-container"></div>
+  <div id="needed-list">
+    <h2>Needed Items</h2>
+    <ul id="needed-items"></ul>
+  </div>
 
   <script>
+    const neededItems = []; // Array to hold needed items
+
     async function fetchSheetData() {
       // URL for TSV data
-      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBtkl_FdufNl2KZ0Jom-MKMn-llMHPhKxNsLsUF8QWR4RuOd8Cq_dUprvwqEVMgmzWCzBUKmyOf9gD/pub?output=tsv';
+      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRKJHzKw0BJ8t8NQCF5wQMN8RHfgeas6GYqqX_1RzQ9phevK4W1GG2mcTuomOiZhxIGo6tutebnwAG6/pub?output=tsv';
 
       try {
         // Fetch the TSV data
@@ -84,29 +98,42 @@
       // Clear the loading message
       document.getElementById('loading').style.display = 'none';
 
+      // Get headers and data rows
+      const headers = data[0];
+      const rows = data.slice(1);
+
+      // Find the indices of columns to exclude
+      const excludeColumns = ['M/O', 'ISSUED'];
+      const excludeIndices = headers
+        .map((header, index) => (excludeColumns.includes(header.trim()) ? index : -1))
+        .filter(index => index !== -1);
+
       // Generate the table HTML
       let html = '<table>';
       html += '<tr>';
-      data[0].forEach(header => {
-        html += `<th>${header.trim()}</th>`;
+      headers.forEach((header, index) => {
+        if (!excludeIndices.includes(index)) {
+          html += `<th>${header.trim()}</th>`;
+        }
       });
-      html += '<th>Checkbox</th><th>Action</th></tr>'; // Add headers for checkboxes and buttons
+      html += '<th>Actions</th></tr>'; // Add actions column
 
-      data.slice(1).forEach((row, rowIndex) => {
+      rows.forEach((row, rowIndex) => {
         html += '<tr>';
-        row.forEach(cell => {
-          const trimmedCell = cell.trim();
-          // Table data: Check if the cell contains a URL
-          if (isValidURL(trimmedCell)) {
-            html += `<td><a href="${trimmedCell}" target="_blank">${trimmedCell}</a></td>`;
-          } else {
-            html += `<td>${trimmedCell}</td>`;
+        row.forEach((cell, cellIndex) => {
+          if (!excludeIndices.includes(cellIndex)) {
+            html += `<td>${cell.trim()}</td>`;
           }
         });
-        // Add checkbox and button to each row
+        // Add checkbox, quantity dropdown, and button to each row
         html += `
-          <td><input type="checkbox" id="checkbox-${rowIndex}" /></td>
-          <td><button onclick="handleButtonClick(${rowIndex})">Action</button></td>
+          <td class="actions">
+            <input type="checkbox" id="checkbox-${rowIndex}" />
+            <select id="quantity-${rowIndex}">
+              ${[...Array(10).keys()].map(i => `<option value="${i + 1}">${i + 1}</option>`).join('')}
+            </select>
+            <button onclick="addToNeeded(${rowIndex})">Add to Needed</button>
+          </td>
         `;
         html += '</tr>';
       });
@@ -117,20 +144,37 @@
       tableContainer.innerHTML = html;
     }
 
-    function isValidURL(string) {
-      try {
-        const url = new URL(string);
-        return url.protocol === 'http:' || url.protocol === 'https:';
-      } catch (_) {
-        return false;
+    function addToNeeded(rowIndex) {
+      const checkbox = document.getElementById(`checkbox-${rowIndex}`);
+      const quantity = document.getElementById(`quantity-${rowIndex}`).value;
+
+      if (!checkbox.checked) {
+        alert('Please check the box before adding the item to the needed list.');
+        return;
       }
+
+      // Get the row data
+      const row = Array.from(document.querySelectorAll(`#table-container table tr:nth-child(${rowIndex + 2}) td`))
+        .map(td => td.textContent);
+
+      const item = {
+        name: row.join(' - '), // Combine all non-excluded columns
+        quantity: quantity
+      };
+
+      neededItems.push(item);
+      renderNeededList();
     }
 
-    function handleButtonClick(rowIndex) {
-      const checkbox = document.getElementById(`checkbox-${rowIndex}`);
-      const isChecked = checkbox.checked;
-      console.log(`Button clicked for row ${rowIndex}, Checkbox checked: ${isChecked}`);
-      alert(`Button clicked for row ${rowIndex}\nCheckbox is ${isChecked ? 'checked' : 'unchecked'}`);
+    function renderNeededList() {
+      const list = document.getElementById('needed-items');
+      list.innerHTML = '';
+
+      neededItems.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} (Qty: ${item.quantity})`;
+        list.appendChild(li);
+      });
     }
 
     // Fetch and display the sheet data
