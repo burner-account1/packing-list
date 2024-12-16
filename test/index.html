@@ -43,28 +43,19 @@
 
   <script>
     async function fetchSheetData() {
-      // URL for your public Google Sheet JSON feed
-      const url = ''https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHdNPuVnbUNA5AjBha3UoK59CE4yZkLmzLiNdV5buXM0xJV7J47aAbSehLcPsFpXNMQqkNc_e3_VQ/pub?output=csv'';
+      // The CSV link you provided
+      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBtkl_FdufNl2KZ0Jom-MKMn-llMHPhKxNsLsUF8QWR4RuOd8Cq_dUprvwqEVMgmzWCzBUKmyOf9gD/pub?output=csv';
       
       try {
-        // Fetch data from the API
+        // Fetch the CSV data
         const response = await fetch(url);
-        const data = await response.json();
+        const csvData = await response.text();
+        
+        // Parse the CSV data
+        const rows = csvData.split('\n').map(row => row.split(','));
 
-        // Parse rows and columns
-        const entries = data.feed.entry;
-        const table = {};
-        entries.forEach(entry => {
-          const cell = entry.gs$cell;
-          const rowIndex = parseInt(cell.row, 10) - 1;
-          const colIndex = parseInt(cell.col, 10) - 1;
-
-          if (!table[rowIndex]) table[rowIndex] = [];
-          table[rowIndex][colIndex] = cell.inputValue; // Adjust to 0-based index
-        });
-
-        const tableData = Object.values(table);
-        renderTable(tableData);
+        // Render the data as a table
+        renderTable(rows);
       } catch (error) {
         console.error('Error fetching sheet data:', error);
         document.getElementById('loading').textContent = 'Failed to load data. Please try again later.';
@@ -72,30 +63,30 @@
     }
 
     function renderTable(data) {
-      // Clear loading message
+      // Clear the loading message
       document.getElementById('loading').style.display = 'none';
 
-      // Generate table HTML
+      // Generate the table HTML
       let html = '<table>';
       data.forEach((row, rowIndex) => {
         html += '<tr>';
-        row.forEach((cell, colIndex) => {
+        row.forEach(cell => {
           if (rowIndex === 0) {
-            html += `<th>${cell || ''}</th>`; // Header row
+            html += `<th>${cell.trim()}</th>`; // Table headers
           } else {
-            html += `<td>${cell || ''}</td>`; // Data rows
+            html += `<td>${cell.trim()}</td>`; // Table cells
           }
         });
         html += '</tr>';
       });
       html += '</table>';
 
-      // Display table in the container
+      // Insert the table into the webpage
       const tableContainer = document.getElementById('table-container');
       tableContainer.innerHTML = html;
     }
 
-    // Fetch and display the sheet data
+    // Fetch and display the sheet data when the page loads
     fetchSheetData();
   </script>
 </body>
