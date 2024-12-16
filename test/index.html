@@ -180,7 +180,7 @@
     function tintMandatoryRows(data, excludeIndices) {
   // Iterate over all rows (excluding the header row)
   data.slice(1).forEach((row, rowIndex) => {
-    const mandatoryIndex = excludeIndices.find(index => data[0][index] === 'Mandatory/Optional');
+    const mandatoryIndex = excludeIndices.find(index => data[0][index] === 'M/O');
     if (mandatoryIndex !== undefined && row[mandatoryIndex].trim() === 'M') {
       const rowElement = document.querySelector(`#table-container table tr:nth-child(${rowIndex + 2})`);
       if (rowElement) {
