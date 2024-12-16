@@ -105,7 +105,7 @@
       const rows = data.slice(1);
 
       // Find the indices of columns to exclude
-      const excludeColumns = ['M/O', 'ISSUED'];
+      const excludeColumns = ['M/O', 'ISSUED','Recommended',"Requires Customization"];
       const excludeIndices = headers
         .map((header, index) => (excludeColumns.includes(header.trim()) ? index : -1))
         .filter(index => index !== -1);
@@ -187,7 +187,7 @@ html += '</table>';
     function tintMandatoryRows(data, excludeIndices) {
   // Iterate over all rows (excluding the header row)
   data.slice(1).forEach((row, rowIndex) => {
-    const mandatoryIndex = excludeIndices.find(index => data[0][index] === 'M/O');
+    const mandatoryIndex = excludeIndices.find(index => data[0][index] === 'M');
     if (mandatoryIndex !== undefined && row[mandatoryIndex].trim() === 'M') {
       const rowElement = document.querySelector(`#table-container table tr:nth-child(${rowIndex + 2})`);
       if (rowElement) {
