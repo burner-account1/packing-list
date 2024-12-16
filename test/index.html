@@ -88,6 +88,7 @@
 
         // Render the data as a table
         renderTable(rows);
+        tintMandatoryRows(data, excludeIndices);
       } catch (error) {
         console.error('Error fetching sheet data:', error);
         document.getElementById('loading').textContent = 'Failed to load data. Please try again later.';
@@ -176,6 +177,19 @@
         list.appendChild(li);
       });
     }
+    function tintMandatoryRows(data, excludeIndices) {
+  // Iterate over all rows (excluding the header row)
+  data.slice(1).forEach((row, rowIndex) => {
+    const mandatoryIndex = excludeIndices.find(index => data[0][index] === 'Mandatory/Optional');
+    if (mandatoryIndex !== undefined && row[mandatoryIndex].trim() === 'M') {
+      const rowElement = document.querySelector(`#table-container table tr:nth-child(${rowIndex + 2})`);
+      if (rowElement) {
+        rowElement.style.backgroundColor = 'yellow';
+      }
+    }
+  });
+}
+
 
     // Fetch and display the sheet data
     fetchSheetData();
